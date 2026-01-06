@@ -1,0 +1,113 @@
+{
+  "models": {
+    "csv_cleaner": {
+      "name": "llama3.1:8b",
+      "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+      "temperature": 0.3,
+      "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+      "max_tokens": 4000,
+      "top_p": 0.9
+    },
+    
+    "text_cleaner": {
+      "name": "llama3.1:8b",
+      "description": "Fast model for cleaning text files (TXT, LOG, MD, etc.)",
+      "temperature": 0.2,
+      "system_prompt": "You are an expert in text file processing. You specialize in fixing encoding issues, normalizing line endings, removing excessive whitespace, and cleaning text formatting. You understand different file encodings (UTF-8, Latin-1, etc.) and line ending conventions (LF, CRLF, CR).",
+      "max_tokens": 3000,
+      "top_p": 0.85
+    },
+    
+    "json_cleaner": {
+      "name": "llama3.1:8b",
+      "description": "Model for cleaning JSON and XML files",
+      "temperature": 0.2,
+      "system_prompt": "You are an expert in structured text formats like JSON and XML. You excel at fixing malformed syntax, validating structure, handling nested data, and normalizing inconsistent formatting. You understand JSON schemas and XML DTDs.",
+      "max_tokens": 3000,
+      "top_p": 0.85
+    },
+    
+    "image_cleaner": {
+      "name": "llama3.1:8b",
+      "description": "Model for image processing and optimization",
+      "temperature": 0.4,
+      "system_prompt": "You are an expert in image processing and optimization. You know how to use PIL/Pillow, handle different image formats (JPEG, PNG, GIF, BMP, TIFF), remove EXIF data for privacy, optimize compression, fix orientation issues, and detect corruption. You balance quality with file size.",
+      "max_tokens": 3500,
+      "top_p": 0.9
+    },
+    
+    "audio_cleaner": {
+      "name": "llama3.1:8b",
+      "description": "Model for audio file processing",
+      "temperature": 0.4,
+      "system_prompt": "You are an expert in audio processing. You understand audio formats (WAV, MP3, FLAC), sample rates, bit depths, and channels. You can normalize audio levels, remove silence, fix format issues, and handle audio metadata. You use libraries like wave, librosa, and pydub.",
+      "max_tokens": 3500,
+      "top_p": 0.9
+    },
+    
+    "document_cleaner": {
+      "name": "llama3.1:8b",
+      "description": "Model for document processing (PDF, DOCX, etc.)",
+      "temperature": 0.3,
+      "system_prompt": "You are an expert in document processing. You can extract text from PDFs and Word documents, clean formatting issues, remove metadata for privacy, handle encoding problems, and optimize document structure. You use libraries like PyPDF2, pdfplumber, and python-docx.",
+      "max_tokens": 4000,
+      "top_p": 0.9
+    },
+    
+    "general_cleaner": {
+      "name": "llama3.1:8b",
+      "description": "General-purpose fallback model for unknown file types",
+      "temperature": 0.5,
+      "system_prompt": "You are a versatile file processing expert. You can analyze any file type and apply appropriate cleaning strategies. You adapt your approach based on the file's structure and content. You're cautious and thorough in your analysis.",
+      "max_tokens": 4000,
+      "top_p": 0.9
+    }
+  },
+  
+  "file_type_mapping": {
+    ".csv": "csv_cleaner",
+    ".tsv": "csv_cleaner",
+    ".xlsx": "csv_cleaner",
+    ".xls": "csv_cleaner",
+    ".parquet": "csv_cleaner",
+    
+    ".txt": "text_cleaner",
+    ".log": "text_cleaner",
+    ".md": "text_cleaner",
+    ".rst": "text_cleaner",
+    
+    ".json": "json_cleaner",
+    ".xml": "json_cleaner",
+    ".html": "json_cleaner",
+    ".htm": "json_cleaner",
+    ".yaml": "json_cleaner",
+    ".yml": "json_cleaner",
+    
+    ".jpg": "image_cleaner",
+    ".jpeg": "image_cleaner",
+    ".png": "image_cleaner",
+    ".gif": "image_cleaner",
+    ".bmp": "image_cleaner",
+    ".tiff": "image_cleaner",
+    ".webp": "image_cleaner",
+    
+    ".wav": "audio_cleaner",
+    ".mp3": "audio_cleaner",
+    ".flac": "audio_cleaner",
+    ".ogg": "audio_cleaner",
+    ".m4a": "audio_cleaner",
+    
+    ".pdf": "document_cleaner",
+    ".docx": "document_cleaner",
+    ".doc": "document_cleaner",
+    ".rtf": "document_cleaner"
+  },
+  
+  "settings": {
+    "default_model": "general_cleaner",
+    "max_retries": 3,
+    "enable_memory": true,
+    "log_sessions": true,
+    "session_storage_path": "./sessions"
+  }
+}

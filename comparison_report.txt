@@ -1,0 +1,93 @@
+================================================================================
+CSV COMPARISON REPORT
+================================================================================
+
+1. BASIC STRUCTURE
+--------------------------------------------------------------------------------
+Clean file shape: (10000, 8)
+Dirty file shape: (10000, 8)
+Row difference: 0
+Column difference: 0
+
+2. COLUMN COMPARISON
+--------------------------------------------------------------------------------
+✓ Columns match perfectly
+
+3. DATA QUALITY COMPARISON (Common Columns)
+--------------------------------------------------------------------------------
+
+Column: Transaction Date
+  Clean - Nulls: 159, Unique: 367
+  Dirty - Nulls: 159, Unique: 367
+  Different values: 159
+
+Column: Quantity
+  Clean - Nulls: 138, Unique: 7
+  Dirty - Nulls: 138, Unique: 7
+  Different values: 138
+
+Column: Total Spent
+  Clean - Nulls: 173, Unique: 19
+  Dirty - Nulls: 173, Unique: 19
+  Different values: 173
+
+Column: Item
+  Clean - Nulls: 333, Unique: 10
+  Dirty - Nulls: 333, Unique: 10
+  Different values: 333
+
+Column: Payment Method
+  Clean - Nulls: 2579, Unique: 5
+  Dirty - Nulls: 0, Unique: 5
+  Different values: 2579
+
+Column: Transaction ID
+  Clean - Nulls: 0, Unique: 10000
+  Dirty - Nulls: 0, Unique: 10000
+  Different values: 0
+
+Column: Price Per Unit
+  Clean - Nulls: 179, Unique: 8
+  Dirty - Nulls: 179, Unique: 8
+  Different values: 179
+
+Column: Location
+  Clean - Nulls: 3265, Unique: 4
+  Dirty - Nulls: 0, Unique: 4
+  Different values: 3265
+
+4. MISSING VALUES SUMMARY
+--------------------------------------------------------------------------------
+Clean file missing values:
+Transaction ID         0
+Item                 333
+Quantity             138
+Price Per Unit       179
+Total Spent          173
+Payment Method      2579
+Location            3265
+Transaction Date     159
+dtype: int64
+
+Dirty file missing values:
+Transaction ID        0
+Item                333
+Quantity            138
+Price Per Unit      179
+Total Spent         173
+Payment Method        0
+Location              0
+Transaction Date    159
+dtype: int64
+
+5. DUPLICATE ROWS
+--------------------------------------------------------------------------------
+Clean file duplicates: 0
+Dirty file duplicates: 0
+
+6. DATA TYPES
+--------------------------------------------------------------------------------
+
+================================================================================
+END OF REPORT
+================================================================================

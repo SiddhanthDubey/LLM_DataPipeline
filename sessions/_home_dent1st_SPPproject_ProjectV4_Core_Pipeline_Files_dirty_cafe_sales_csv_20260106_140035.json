@@ -1,0 +1,92 @@
+{
+  "filename": "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/dirty_cafe_sales.csv",
+  "file_metadata": {
+    "basic": {
+      "filename": "dirty_cafe_sales.csv",
+      "full_path": "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/dirty_cafe_sales.csv",
+      "extension": ".csv",
+      "size_bytes": 550305,
+      "size_kb": 537.41,
+      "size_mb": 0.52,
+      "created": "2026-01-06T13:58:36.846419",
+      "modified": "2026-01-06T13:58:36.846124",
+      "accessed": "2026-01-06T13:58:36.847682",
+      "mime_type": "text/csv",
+      "is_symlink": false,
+      "sha256": "e223ddd46fa4d0f35260ac50b0d1af8d8810f5f03d604385afffcba2b2407ab8",
+      "md5": "cbea578ddae60b66713023defaa20987"
+    }
+  },
+  "model_config": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  },
+  "stages": {
+    "inspection": {
+      "success": true,
+      "code": "import pandas as pd\nfrom typing import Dict, List\n\ndef inspect_file(file_path: str) -> None:\n    try:\n        # Load the file using pandas\n        df = pd.read_csv(file_path)\n\n        # Get basic information about the file\n        info = {\n            \"filename\": 'dirty_cafe_sales.csv',\n            \"rows\": len(df),\n            \"columns\": len(df.columns)\n        }\n\n        print(\"File Information:\")\n        for key, value in info.items():\n            print(f\"{key}: {value}\")\n\n        # Analyze data types and missing values\n        dtypes = df.dtypes.value_counts().to_dict()\n        missing_values = df.isnull().sum().to_dict()\n\n        print(\"\\nData Types:\")\n        for dtype, count in dtypes.items():\n            print(f\"{dtype}: {count}\")\n\n        print(\"\\nMissing Values:\")\n        for column, count in missing_values.items():\n            percentage = (count / len(df)) * 100\n            print(f\"{column}: {count} ({percentage:.2f}%)\")\n\n\n        # Detect duplicates and outliers\n        duplicate_rows = df.duplicated().sum()\n        outlier_count = df.isnull().sum().sum()\n\n        print(\"\\nDuplicates:\", duplicate_rows)\n        print(\"Outliers:\", outlier_count)\n\n        # Identify columns with high missing % (>70%, 20-70%, <20%)\n        for column, count in missing_values.items():\n            percentage = (count / len(df)) * 100\n            if percentage > 70:\n                print(f\"High Missing %: {column} ({percentage:.2f}%)\")\n\n\n    except pd.errors.EmptyDataError:\n        print(\"File is empty.\")\n    except pd.errors.ParserError as e:\n        print(f\"Error parsing file: {e}\")\n\ninspect_file('/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/dirty_cafe_sales.csv')",
+      "output": "File Information:\nfilename: dirty_cafe_sales.csv\nrows: 10000\ncolumns: 8\n\nData Types:\nobject: 8\n\nMissing Values:\nTransaction ID: 0 (0.00%)\nItem: 333 (3.33%)\nQuantity: 138 (1.38%)\nPrice Per Unit: 179 (1.79%)\nTotal Spent: 173 (1.73%)\nPayment Method: 2579 (25.79%)\nLocation: 3265 (32.65%)\nTransaction Date: 159 (1.59%)\n\nDuplicates: 0\nOutliers: 6826\n",
+      "timestamp": "2026-01-06T14:01:43.647248"
+    },
+    "cleaning": {
+      "success": true,
+      "code": "import pandas as pd\nfrom typing import Dict, List\nimport logging\n\n# Set up logging\nlogging.basicConfig(level=logging.INFO)\n\ndef clean_file(file_path: str) -> None:\n    try:\n        # Load the file using pandas\n        df = pd.read_csv(file_path)\n\n        # Identify columns with high missing % (>70%, 20-70%, <20%)\n        missing_values = df.isnull().sum().to_dict()\n        for column, count in missing_values.items():\n            percentage = (count / len(df)) * 100\n            if percentage > 70:\n                logging.warning(f\"Dropping column {column} due to high missing % ({percentage:.2f}%).\")\n                df.drop(columns=[column], inplace=True)\n            elif 20 <= percentage <= 70:\n                if df[column].dtype in ['int64', 'float64']:\n                    median = df.groupby('related_column')[column].transform(lambda x: x.median())\n                    df[column] = median\n                elif df[column].dtype == 'object':\n                    mode = df[column].mode().iloc[0]\n                    df[column] = df[column].fillna(mode)\n                else:\n                    logging.warning(f\"Imputing column {column} with mode.\")\n                    mode = df[column].mode().iloc[0]\n                    df[column] = df[column].fillna(mode)\n\n        # Remove exact duplicates\n        df.drop_duplicates(inplace=True)\n\n        # Fix data types (category dtype for low-cardinality)\n        for column in df.columns:\n            if len(df[column].unique()) < 10:\n                df[column] = pd.Categorical(df[column])\n\n        # Strip whitespace from strings\n        for column in df.select_dtypes(include=['object']).columns:\n            df[column] = df[column].str.strip()\n\n        # Remove control characters and null bytes\n        for column in df.columns:\n            df[column] = df[column].str.replace(r'[\\x00-\\x1f]', '', regex=True)\n\n        # Validate ranges (no negative ages, impossible dates)\n        for column in ['age', 'date']:\n            if column in df.columns:\n                df[column] = pd.to_numeric(df[column], errors='coerce')\n                df.dropna(subset=[column], inplace=True)\n\n        # Save cleaned data to new CSV file\n        logging.info(\"Saving cleaned data to cleaned_dirty_cafe_sales.csv\")\n        df.to_csv('cleaned_dirty_cafe_sales.csv', index=False)\n\n    except pd.errors.EmptyDataError:\n        logging.error(\"File is empty.\")\n    except pd.errors.ParserError as e:\n        logging.error(f\"Error parsing file: {e}\")\n\nclean_file('/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/dirty_cafe_sales.csv')",
+      "output": "STDERR:\nINFO:root:Saving cleaned data to cleaned_dirty_cafe_sales.csv\n",
+      "timestamp": "2026-01-06T14:02:40.582559"
+    }
+  },
+  "verification": {
+    "exists": false
+  },
+  "success": false,
+  "conversation": {
+    "model": "llama3.1:8b",
+    "temperature": 0.3,
+    "message_count": 5,
+    "messages": [
+      {
+        "role": "system",
+        "content_preview": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling...",
+        "content_length": 323
+      },
+      {
+        "role": "user",
+        "content_preview": "You are analyzing a file for inspection.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": \"dirty_cafe_...",
+        "content_length": 3272
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\nfrom typing import Dict, List\n\ndef inspect_file(file_path: str) -> Non...",
+        "content_length": 1706
+      },
+      {
+        "role": "user",
+        "content_preview": "You are cleaning a file based on inspection results.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": ...",
+        "content_length": 4140
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\nfrom typing import Dict, List\nimport logging\n\n# Set up logging\nlogging...",
+        "content_length": 2593
+      }
+    ]
+  },
+  "session_id": "_home_dent1st_SPPproject_ProjectV4_Core_Pipeline_Files_dirty_cafe_sales_csv_20260106_140035",
+  "timestamp": "2026-01-06T14:02:40.582680",
+  "model_used": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  }
+}
