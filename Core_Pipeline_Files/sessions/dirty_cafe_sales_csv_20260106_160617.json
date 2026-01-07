@@ -1,0 +1,96 @@
+{
+  "filename": "dirty_cafe_sales.csv",
+  "file_metadata": {
+    "basic": {
+      "filename": "dirty_cafe_sales.csv",
+      "full_path": "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/dirty_cafe_sales.csv",
+      "extension": ".csv",
+      "size_bytes": 550305,
+      "size_kb": 537.41,
+      "size_mb": 0.52,
+      "created": "2026-01-06T13:58:36.846419",
+      "modified": "2026-01-06T13:58:36.846124",
+      "accessed": "2026-01-06T13:58:36.847682",
+      "mime_type": "text/csv",
+      "is_symlink": false,
+      "sha256": "e223ddd46fa4d0f35260ac50b0d1af8d8810f5f03d604385afffcba2b2407ab8",
+      "md5": "cbea578ddae60b66713023defaa20987"
+    }
+  },
+  "model_config": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  },
+  "stages": {
+    "inspection": {
+      "success": true,
+      "code": "import pandas as pd\nfrom typing import Dict, Any\n\ndef inspect_file(file_path: str) -> None:\n    try:\n        # Load the file using pandas\n        df = pd.read_csv(file_path)\n\n        # Get basic metadata\n        filename = 'dirty_cafe_sales.csv'\n        full_path = file_path\n        extension = '.csv'\n\n        # Analyze the data\n        print(f\"==================== INSPECTION REPORT ====================\")\n        print(f\"File: {filename}\")\n        print(f\"Type: .csv\")\n        print(f\"Model: csv_cleaner\")\n\n        # Row and column counts\n        print(f\"Rows: {df.shape[0]}\")\n        print(f\"Columns: {df.shape[1]}\")\n\n        # Data types for each column\n        print(\"Data Types:\")\n        for col in df.columns:\n            print(f\"{col}: {df[col].dtype}\")\n\n        # Missing value analysis (count and percentage)\n        missing_count = df.isnull().sum()\n        missing_percentage = (missing_count / len(df)) * 100\n        print(\"\\nMissing Value Analysis:\")\n        for col, count in missing_count.items():\n            print(f\"{col}: {count} ({missing_percentage[col]:.2f}%)\")\n\n        # Duplicate row detection\n        duplicate_rows = df.duplicated().sum()\n        if duplicate_rows > 0:\n            print(f\"\\nDuplicate Rows: {duplicate_rows}\")\n\n        # Statistical summary for numeric columns\n        numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns\n        for col in numeric_cols:\n            print(f\"\\n{col}:\")\n            print(df[col].describe())\n\n        # Unique value counts for categorical columns\n        categorical_cols = df.select_dtypes(include=['object']).columns\n        for col in categorical_cols:\n            print(f\"\\n{col}:\")\n            print(df[col].value_counts())\n\n        # Identify columns with missing values\n        missing_cols = [col for col, count in missing_count.items() if count > 0]\n        if missing_cols:\n            print(\"\\nColumns with Missing Values:\")\n            for col in missing_cols:\n                print(col)\n\n    except Exception as e:\n        print(f\"Error: {str(e)}\")\n\ninspect_file('/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/dirty_cafe_sales.csv')",
+      "output": "==================== INSPECTION REPORT ====================\nFile: dirty_cafe_sales.csv\nType: .csv\nModel: csv_cleaner\nRows: 10000\nColumns: 8\nData Types:\nTransaction ID: object\nItem: object\nQuantity: object\nPrice Per Unit: object\nTotal Spent: object\nPayment Method: object\nLocation: object\nTransaction Date: object\n\nMissing Value Analysis:\nTransaction ID: 0 (0.00%)\nItem: 333 (3.33%)\nQuantity: 138 (1.38%)\nPrice Per Unit: 179 (1.79%)\nTotal Spent: 173 (1.73%)\nPayment Method: 2579 (25.79%)\nLocation: 3265 (32.65%)\nTransaction Date: 159 (1.59%)\n\nTransaction ID:\nTransaction ID\nTXN_6170729    1\nTXN_1961373    1\nTXN_4977031    1\nTXN_4271903    1\nTXN_7034554    1\n              ..\nTXN_3709394    1\nTXN_3522028    1\nTXN_3567645    1\nTXN_5132361    1\nTXN_2616390    1\nName: count, Length: 10000, dtype: int64\n\nItem:\nItem\nJuice       1171\nCoffee      1165\nSalad       1148\nCake        1139\nSandwich    1131\nSmoothie    1096\nCookie      1092\nTea         1089\nUNKNOWN      344\nERROR        292\nName: count, dtype: int64\n\nQuantity:\nQuantity\n5          2013\n2          1974\n4          1863\n3          1849\n1          1822\nUNKNOWN     171\nERROR       170\nName: count, dtype: int64\n\nPrice Per Unit:\nPrice Per Unit\n3.0        2429\n4.0        2331\n2.0        1227\n5.0        1204\n1.0        1143\n1.5        1133\nERROR       190\nUNKNOWN     164\nName: count, dtype: int64\n\nTotal Spent:\nTotal Spent\n6.0        979\n12.0       939\n3.0        930\n4.0        923\n20.0       746\n15.0       734\n8.0        677\n10.0       524\n2.0        497\n9.0        479\n5.0        468\n16.0       444\n25.0       259\n7.5        237\n1.0        232\n4.5        225\n1.5        205\nUNKNOWN    165\nERROR      164\nName: count, dtype: int64\n\nPayment Method:\nPayment Method\nDigital Wallet    2291\nCredit Card       2273\nCash              2258\nERROR              306\nUNKNOWN            293\nName: count, dtype: int64\n\nLocation:\nLocation\nTakeaway    3022\nIn-store    3017\nERROR        358\nUNKNOWN      338\nName: count, dtype: int64\n\nTransaction Date:\nTransaction Date\nUNKNOWN       159\nERROR         142\n2023-02-06     40\n2023-06-16     40\n2023-07-21     39\n             ... \n2023-09-24     15\n2023-11-24     15\n2023-03-11     14\n2023-07-22     14\n2023-02-17     14\nName: count, Length: 367, dtype: int64\n\nColumns with Missing Values:\nItem\nQuantity\nPrice Per Unit\nTotal Spent\nPayment Method\nLocation\nTransaction Date\n",
+      "timestamp": "2026-01-06T16:07:00.437750"
+    },
+    "cleaning": {
+      "success": true,
+      "code": "import pandas as pd\nfrom typing import Dict, Any\nimport logging\n\n# Set up logging\nlogging.basicConfig(level=logging.INFO)\n\ndef clean_file(file_path: str) -> None:\n    try:\n        # Load the file using pandas\n        df = pd.read_csv(file_path)\n\n        # Identify columns with missing values\n        missing_cols = [col for col in df.columns if df[col].isnull().sum() > 0]\n\n        # Prioritize by severity and plan cleaning strategy\n        critical_issues = []\n        warning_issues = []\n\n        # Handle columns with >70% missing values\n        for col in missing_cols:\n            if (df[col].isnull().sum() / len(df)) * 100 > 70:\n                logging.info(f\"Dropping column '{col}' due to high missing value rate (>70%).\")\n                df.drop(columns=[col], inplace=True)\n                critical_issues.append((f\"Dropped column '{col}'\", f\"Missing value rate: {(df[col].isnull().sum() / len(df)) * 100:.2f}%\"))\n\n        # Handle columns with 20-70% missing values\n        for col in missing_cols:\n            if (df[col].isnull().sum() / len(df)) * 100 >= 20 and (df[col].isnull().sum() / len(df)) * 100 <= 70:\n                logging.info(f\"Imputing column '{col}' due to moderate missing value rate.\")\n                if df[col].dtype == 'object':\n                    df[col] = df[col].fillna(df[col].mode()[0])\n                elif df[col].dtype == 'int64' or df[col].dtype == 'float64':\n                    df[col] = df[col].fillna(df[col].median())\n                else:\n                    logging.warning(f\"Unsupported data type for column '{col}'. Skipping imputation.\")\n                warning_issues.append((f\"Imputed column '{col}'\", f\"Missing value rate: {(df[col].isnull().sum() / len(df)) * 100:.2f}%\"))\n\n        # Handle columns with <20% missing values\n        for col in df.columns:\n            if (df[col].isnull().sum() / len(df)) * 100 < 20:\n                logging.info(f\"Imputing column '{col}' due to low missing value rate.\")\n                if df[col].dtype == 'object':\n                    df[col] = df[col].fillna(df[col].mode()[0])\n                elif df[col].dtype == 'int64' or df[col].dtype == 'float64':\n                    df[col] = df[col].fillna(df[col].median())\n                else:\n                    logging.warning(f\"Unsupported data type for column '{col}'. Skipping imputation.\")\n                warning_issues.append((f\"Imputed column '{col}'\", f\"Missing value rate: {(df[col].isnull().sum() / len(df)) * 100:.2f}%\"))\n\n        # Remove exact duplicates\n        df.drop_duplicates(inplace=True)\n\n        # Fix data types (category dtype for low-cardinality)\n        for col in df.columns:\n            if df[col].nunique() < 10 and df[col].dtype != 'category':\n                logging.info(f\"Converting column '{col}' to category dtype.\")\n                df[col] = pd.Categorical(df[col])\n                warning_issues.append((f\"Converted column '{col}' to category dtype.\", f\"Original dtype: {df[col].dtype}\"))\n\n        # Strip whitespace from strings\n        for col in df.columns:\n            if df[col].dtype == 'object':\n                logging.info(f\"Stripping whitespace from column '{col}'.\")\n                df[col] = df[col].str.strip()\n                warning_issues.append((f\"Stripped whitespace from column '{col}'.\", f\"Original dtype: {df[col].dtype}\"))\n\n        # Remove control characters and null bytes\n        for col in df.columns:\n            if df[col].dtype == 'object':\n                logging.info(f\"Removing control characters and null bytes from column '{col}'.\")\n                df[col] = df[col].str.replace(r'[\\x00-\\x1f\\x7f-\\x9f]', '', regex=True)\n                warning_issues.append((f\"Removed control characters and null bytes from column '{col}'.\", f\"Original dtype: {df[col].dtype}\"))\n\n        # Validate ranges (no negative ages, impossible dates)\n        for col in df.columns:\n            if df[col].dtype == 'int64' or df[col].dtype == 'float64':\n                logging.info(f\"Validating range of column '{col}'.\")\n                if df[col].min() < 0:\n                    logging.warning(f\"Negative value found in column '{col}'. Skipping validation.\")\n                elif pd.to_datetime(df[col]).min() < pd.Timestamp('1970-01-01'):\n                    logging.warning(f\"Impossible date found in column '{col}'. Skipping validation.\")\n                else:\n                    warning_issues.append((f\"Validated range of column '{col}'.\", f\"Original dtype: {df[col].dtype}\"))\n\n        # Save cleaned data to new file\n        df.to_csv('cleaned_dirty_cafe_sales.csv', index=False)\n\n        # Print progress and results\n        logging.info(f\"Cleaned data saved to 'cleaned_dirty_cafe_sales.csv'.\")\n        logging.info(f\"ACTIONS TAKEN:\")\n        for issue in critical_issues + warning_issues:\n            logging.info(f\"- {issue[0]}: {issue[1]}\")\n        logging.info(f\"RESULTS:\")\n        logging.info(f\"- Rows/Items: {len(df)} \u2192 {len(df)}\")\n        logging.info(f\"- Columns/Fields: {len(df.columns)} \u2192 {len(df.columns)}\")\n        logging.info(f\"- Missing values: {df.isnull().sum()} \u2192 {df.isnull().sum()}\")\n        logging.info(f\"- File size: {(os.path.getsize(file_path) / 1024):.2f} KB \u2192 {(os.path.getsize('cleaned_dirty_cafe_sales.csv') / 1024):.2f} KB\")\n\n    except Exception as e:\n        logging.error(f\"Error during cleaning process: {str(e)}\")\nclean_file('dirty_cafe_sales.csv')\n",
+      "output": "STDERR:\nINFO:root:Imputing column 'Payment Method' due to moderate missing value rate.\nINFO:root:Imputing column 'Location' due to moderate missing value rate.\nINFO:root:Imputing column 'Transaction ID' due to low missing value rate.\nINFO:root:Imputing column 'Item' due to low missing value rate.\nINFO:root:Imputing column 'Quantity' due to low missing value rate.\nINFO:root:Imputing column 'Price Per Unit' due to low missing value rate.\nINFO:root:Imputing column 'Total Spent' due to low missing value rate.\nINFO:root:Imputing column 'Payment Method' due to low missing value rate.\nINFO:root:Imputing column 'Location' due to low missing value rate.\nINFO:root:Imputing column 'Transaction Date' due to low missing value rate.\nINFO:root:Converting column 'Quantity' to category dtype.\nINFO:root:Converting column 'Price Per Unit' to category dtype.\nINFO:root:Converting column 'Payment Method' to category dtype.\nINFO:root:Converting column 'Location' to category dtype.\nINFO:root:Stripping whitespace from column 'Transaction ID'.\nINFO:root:Stripping whitespace from column 'Item'.\nINFO:root:Stripping whitespace from column 'Total Spent'.\nINFO:root:Stripping whitespace from column 'Transaction Date'.\nINFO:root:Removing control characters and null bytes from column 'Transaction ID'.\nINFO:root:Removing control characters and null bytes from column 'Item'.\nINFO:root:Removing control characters and null bytes from column 'Total Spent'.\nINFO:root:Removing control characters and null bytes from column 'Transaction Date'.\nINFO:root:Cleaned data saved to 'cleaned_dirty_cafe_sales.csv'.\nINFO:root:ACTIONS TAKEN:\nINFO:root:- Imputed column 'Payment Method': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Location': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Transaction ID': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Item': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Quantity': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Price Per Unit': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Total Spent': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Payment Method': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Location': Missing value rate: 0.00%\nINFO:root:- Imputed column 'Transaction Date': Missing value rate: 0.00%\nINFO:root:- Converted column 'Quantity' to category dtype.: Original dtype: category\nINFO:root:- Converted column 'Price Per Unit' to category dtype.: Original dtype: category\nINFO:root:- Converted column 'Payment Method' to category dtype.: Original dtype: category\nINFO:root:- Converted column 'Location' to category dtype.: Original dtype: category\nINFO:root:- Stripped whitespace from column 'Transaction ID'.: Original dtype: object\nINFO:root:- Stripped whitespace from column 'Item'.: Original dtype: object\nINFO:root:- Stripped whitespace from column 'Total Spent'.: Original dtype: object\nINFO:root:- Stripped whitespace from column 'Transaction Date'.: Original dtype: object\nINFO:root:- Removed control characters and null bytes from column 'Transaction ID'.: Original dtype: object\nINFO:root:- Removed control characters and null bytes from column 'Item'.: Original dtype: object\nINFO:root:- Removed control characters and null bytes from column 'Total Spent'.: Original dtype: object\nINFO:root:- Removed control characters and null bytes from column 'Transaction Date'.: Original dtype: object\nINFO:root:RESULTS:\nINFO:root:- Rows/Items: 10000 \u2192 10000\nINFO:root:- Columns/Fields: 8 \u2192 8\nINFO:root:- Missing values: Transaction ID      0\nItem                0\nQuantity            0\nPrice Per Unit      0\nTotal Spent         0\nPayment Method      0\nLocation            0\nTransaction Date    0\ndtype: int64 \u2192 Transaction ID      0\nItem                0\nQuantity            0\nPrice Per Unit      0\nTotal Spent         0\nPayment Method      0\nLocation            0\nTransaction Date    0\ndtype: int64\nERROR:root:Error during cleaning process: name 'os' is not defined\n",
+      "timestamp": "2026-01-06T16:09:09.570937"
+    }
+  },
+  "verification": {
+    "exists": true,
+    "size": 606502,
+    "rows": 10000,
+    "columns": 8,
+    "missing_values": 0
+  },
+  "success": true,
+  "conversation": {
+    "model": "llama3.1:8b",
+    "temperature": 0.3,
+    "message_count": 5,
+    "messages": [
+      {
+        "role": "system",
+        "content_preview": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling...",
+        "content_length": 323
+      },
+      {
+        "role": "user",
+        "content_preview": "You are analyzing a file for inspection.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": \"dirty_cafe_...",
+        "content_length": 3419
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\nfrom typing import Dict, Any\n\ndef inspect_file(file_path: str) -> None...",
+        "content_length": 2164
+      },
+      {
+        "role": "user",
+        "content_preview": "You are cleaning a file based on inspection results.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": ...",
+        "content_length": 6157
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\nfrom typing import Dict, Any\nimport logging\n\n# Set up logging\nlogging....",
+        "content_length": 5368
+      }
+    ]
+  },
+  "session_id": "dirty_cafe_sales_csv_20260106_160617",
+  "timestamp": "2026-01-06T16:09:09.596477",
+  "model_used": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  }
+}

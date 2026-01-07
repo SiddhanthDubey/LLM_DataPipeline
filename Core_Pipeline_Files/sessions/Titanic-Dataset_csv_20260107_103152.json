@@ -1,0 +1,116 @@
+{
+  "filename": "Titanic-Dataset.csv",
+  "file_metadata": {
+    "basic": {
+      "filename": "Titanic-Dataset.csv",
+      "full_path": "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/Titanic-Dataset.csv",
+      "extension": ".csv",
+      "size_bytes": 61194,
+      "size_kb": 59.76,
+      "size_mb": 0.06,
+      "created": "2026-01-06T15:48:36.537620",
+      "modified": "2026-01-06T15:48:36.537305",
+      "accessed": "2026-01-06T15:48:36.539727",
+      "mime_type": "text/csv",
+      "is_symlink": false,
+      "sha256": "7d118fef8b6ccf7f81111877bc388536f7b1e498a655e3d649d19aaa010e9f6f",
+      "md5": "2309cc5f04782ed9bb6016d9f4e381cf"
+    }
+  },
+  "model_config": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  },
+  "stages": {
+    "inspection": {
+      "success": true,
+      "code": "import pandas as pd\n\n# Load the CSV file using pandas\ntry:\n    df = pd.read_csv('Titanic-Dataset.csv')\nexcept Exception as e:\n    print(f\"Error loading file: {e}\")\n    exit(1)\n\n# Analyze structured data (CSV)\nprint(\"\\n=== STRUCTURED DATA ANALYSIS ===\")\nprint(\"Row count:\", len(df))\nprint(\"Column count:\", len(df.columns))\n\n# Check for missing values\nmissing_values = df.isnull().sum()\nfor col in missing_values.index:\n    print(f\"Missing values in column '{col}': {missing_values[col]} ({(missing_values[col] / len(df)) * 100:.2f}%)\")\n\n\n# Identify columns with >70%, 20-70%, <20% missing\nthresholds = [0.7, 0.2]\nfor threshold in thresholds:\n    mask = df.isnull().mean() >= threshold\n    if mask.any():\n        print(f\"Columns with {threshold*100:.2f}% or more missing values:\")\n        for col in mask[mask].index:\n            print(col)\n\n\n# Check for duplicate rows\nduplicate_rows = df.duplicated().sum()\nprint(f\"Duplicate row count: {duplicate_rows}\")\n\n\n# Calculate summary statistics for numeric columns\nnumeric_cols = df.select_dtypes(include=['int64', 'float64']).columns\nfor col in numeric_cols:\n    print(f\"Summary statistics for column '{col}':\")\n    print(df[col].describe())\n\n\n# Check for text columns with unique value counts > 10\ntext_cols = df.select_dtypes(include=['object']).columns\nfor col in text_cols:\n    unique_values = df[col].nunique()\n    if unique_values > 10:\n        print(f\"Column '{col}' has {unique_values} unique values\")\n\n\n# Check for error values: \"ERROR\", \"UNKNOWN\", \"N/A\", \"null\"\nerror_values = [\"ERROR\", \"UNKNOWN\", \"N/A\", \"null\"]\nfor col in df.columns:\n    if (df[col].isin(error_values)).any():\n        print(f\"Column '{col}' contains error value(s): {df[col][df[col].isin(error_values)].unique()}\")\n\n\n# Check for impossible values (negative prices, future dates)\nfor col in numeric_cols:\n    if (df[col] < 0).any():\n        print(f\"Column '{col}' has negative value(s)\")\n    if pd.to_datetime(df[col], errors='coerce').max() > pd.Timestamp('now'):\n        print(f\"Column '{col}' has future date(s)\")\n\n\n# Identify issues\nissues = []\nif missing_values.sum() > 0:\n    issues.append(f\"[INFO] - {missing_values.sum()} rows have missing values\")\nfor col in numeric_cols:\n    if (df[col] < 0).any():\n        issues.append(f\"[WARNING] - Column '{col}' has negative value(s)\")\n    if pd.to_datetime(df[col], errors='coerce').max() > pd.Timestamp('now'):\n        issues.append(f\"[CRITICAL] - Column '{col}' has future date(s)\")\n\n\n# Print inspection report\nprint(\"\\n==================== INSPECTION REPORT ====================\")\nprint(\"File: Titanic-Dataset.csv\")\nprint(\"Type: .csv\")\nprint(\"Model: csv_cleaner\")\n\nprint(\"\\nISSUES FOUND:\")\nfor issue in issues:\n    print(issue)\n\nprint(\"\\nRECOMMENDED CLEANING ACTIONS:\")\nif \"[CRITICAL]\" in issues[0]:\n    print(\"1. Fix future dates in column(s)\")\nelif \"[WARNING]\" in issues[0]:\n    print(\"1. Remove negative values from column(s)\")\nelse:\n    print(\"1. Impute missing values\")",
+      "output": "\n=== STRUCTURED DATA ANALYSIS ===\nRow count: 891\nColumn count: 12\nMissing values in column 'PassengerId': 0 (0.00%)\nMissing values in column 'Survived': 0 (0.00%)\nMissing values in column 'Pclass': 0 (0.00%)\nMissing values in column 'Name': 0 (0.00%)\nMissing values in column 'Sex': 0 (0.00%)\nMissing values in column 'Age': 177 (19.87%)\nMissing values in column 'SibSp': 0 (0.00%)\nMissing values in column 'Parch': 0 (0.00%)\nMissing values in column 'Ticket': 0 (0.00%)\nMissing values in column 'Fare': 0 (0.00%)\nMissing values in column 'Cabin': 687 (77.10%)\nMissing values in column 'Embarked': 2 (0.22%)\nColumns with 70.00% or more missing values:\nCabin\nColumns with 20.00% or more missing values:\nCabin\nDuplicate row count: 0\nSummary statistics for column 'PassengerId':\ncount    891.000000\nmean     446.000000\nstd      257.353842\nmin        1.000000\n25%      223.500000\n50%      446.000000\n75%      668.500000\nmax      891.000000\nName: PassengerId, dtype: float64\nSummary statistics for column 'Survived':\ncount    891.000000\nmean       0.383838\nstd        0.486592\nmin        0.000000\n25%        0.000000\n50%        0.000000\n75%        1.000000\nmax        1.000000\nName: Survived, dtype: float64\nSummary statistics for column 'Pclass':\ncount    891.000000\nmean       2.308642\nstd        0.836071\nmin        1.000000\n25%        2.000000\n50%        3.000000\n75%        3.000000\nmax        3.000000\nName: Pclass, dtype: float64\nSummary statistics for column 'Age':\ncount    714.000000\nmean      29.699118\nstd       14.526497\nmin        0.420000\n25%       20.125000\n50%       28.000000\n75%       38.000000\nmax       80.000000\nName: Age, dtype: float64\nSummary statistics for column 'SibSp':\ncount    891.000000\nmean       0.523008\nstd        1.102743\nmin        0.000000\n25%        0.000000\n50%        0.000000\n75%        1.000000\nmax        8.000000\nName: SibSp, dtype: float64\nSummary statistics for column 'Parch':\ncount    891.000000\nmean       0.381594\nstd        0.806057\nmin        0.000000\n25%        0.000000\n50%        0.000000\n75%        0.000000\nmax        6.000000\nName: Parch, dtype: float64\nSummary statistics for column 'Fare':\ncount    891.000000\nmean      32.204208\nstd       49.693429\nmin        0.000000\n25%        7.910400\n50%       14.454200\n75%       31.000000\nmax      512.329200\nName: Fare, dtype: float64\nColumn 'Name' has 891 unique values\nColumn 'Ticket' has 681 unique values\nColumn 'Cabin' has 147 unique values\n\n==================== INSPECTION REPORT ====================\nFile: Titanic-Dataset.csv\nType: .csv\nModel: csv_cleaner\n\nISSUES FOUND:\n[INFO] - 866 rows have missing values\n\nRECOMMENDED CLEANING ACTIONS:\n1. Impute missing values\n",
+      "timestamp": "2026-01-07T10:34:34.865183"
+    },
+    "cleaning": {
+      "success": true,
+      "code": "import pandas as pd\n\n# Load the CSV file using pandas\ntry:\n    df = pd.read_csv('Titanic-Dataset.csv')\nexcept Exception as e:\n    print(f\"Error loading file: {e}\")\n    exit(1)\n\n# Replace error values with NaN\nerror_values = [\"ERROR\", \"UNKNOWN\", \"N/A\", \"null\"]\nfor col in df.columns:\n    if (df[col].isin(error_values)).any():\n        df[col] = df[col].replace(error_values, pd.NA)\n\n# Impute missing values for text columns using mode\ntext_cols = df.select_dtypes(include=['object']).columns\nfor col in text_cols:\n    df[col] = df[col].fillna(df[col].mode()[0])\n\n# Impute missing values for numeric columns using median\nnumeric_cols = df.select_dtypes(include=['int64', 'float64']).columns\nfor col in numeric_cols:\n    df[col] = df[col].fillna(df[col].median())\n\n# Remove duplicates\ndf = df.drop_duplicates()\n\n# Save the cleaned file\ndf.to_csv('cleaned_Titanic-Dataset.csv', index=False)\n\n# Print final missing count\nprint(f\"Missing values: {df.isnull().sum().sum()}\")\n\n# Print cleaning report\nprint(\"\\n==================== CLEANING REPORT ====================\")\nprint(\"File: Titanic-Dataset.csv\")\nprint(\"Type: .csv\")\nprint(\"Model: csv_cleaner\")\n\nprint(\"\\nACTIONS TAKEN:\")\nprint(f\"1. Imputed missing values for text columns using mode ({text_cols})\")\nprint(f\"2. Imputed missing values for numeric columns using median ({numeric_cols})\")\nprint(f\"3. Removed duplicates ({df.duplicated().sum()})\")\n\n# Get the size of the file\nimport os\nfile_size = os.path.getsize('cleaned_Titanic-Dataset.csv')\nprint(f\"- File size: {(61194 / 1024):.2f} KB \u2192 {(file_size / 1024):.2f} KB\")\n\nprint(\"\\n\u2713 Saved to: cleaned_Titanic-Dataset.csv\")",
+      "output": "Missing values: 0\n\n==================== CLEANING REPORT ====================\nFile: Titanic-Dataset.csv\nType: .csv\nModel: csv_cleaner\n\nACTIONS TAKEN:\n1. Imputed missing values for text columns using mode (Index(['Name', 'Sex', 'Ticket', 'Cabin', 'Embarked'], dtype='object'))\n2. Imputed missing values for numeric columns using median (Index(['PassengerId', 'Survived', 'Pclass', 'Age', 'SibSp', 'Parch', 'Fare'], dtype='object'))\n3. Removed duplicates (0)\n- File size: 59.76 KB \u2192 65.94 KB\n\n\u2713 Saved to: cleaned_Titanic-Dataset.csv\n",
+      "timestamp": "2026-01-07T10:36:21.337409"
+    }
+  },
+  "verification": {
+    "exists": true,
+    "size": 67521,
+    "rows": 891,
+    "columns": 12,
+    "missing_values": 0
+  },
+  "success": true,
+  "conversation": {
+    "model": "llama3.1:8b",
+    "temperature": 0.3,
+    "message_count": 9,
+    "messages": [
+      {
+        "role": "system",
+        "content_preview": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling...",
+        "content_length": 323
+      },
+      {
+        "role": "user",
+        "content_preview": "You are analyzing a file for inspection.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": \"Titanic-Dat...",
+        "content_length": 5034
+      },
+      {
+        "role": "assistant",
+        "content_preview": "Here is the executable Python code for inspecting the `Titanic-Dataset.csv` file:\n\n```python\nimport ...",
+        "content_length": 3522
+      },
+      {
+        "role": "user",
+        "content_preview": "The previous code failed with this error:\n\nERROR OUTPUT:\n\n=== STRUCTURED DATA ANALYSIS ===\nRow count...",
+        "content_length": 6173
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\n\n# Load the CSV file using pandas\ntry:\n    df = pd.read_csv('Titanic-D...",
+        "content_length": 2963
+      },
+      {
+        "role": "user",
+        "content_preview": "You are cleaning a file based on inspection results.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": ...",
+        "content_length": 8497
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\n\n# Load the CSV file using pandas\ntry:\n    df = pd.read_csv('Titanic-D...",
+        "content_length": 1741
+      },
+      {
+        "role": "user",
+        "content_preview": "The previous code failed with this error:\n\nERROR OUTPUT:\nMissing values: 0\n\n==================== CLE...",
+        "content_length": 2999
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\n\n# Load the CSV file using pandas\ntry:\n    df = pd.read_csv('Titanic-D...",
+        "content_length": 1633
+      }
+    ]
+  },
+  "session_id": "Titanic-Dataset_csv_20260107_103152",
+  "timestamp": "2026-01-07T10:36:21.343804",
+  "model_used": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  }
+}

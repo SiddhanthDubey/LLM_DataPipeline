@@ -1,0 +1,121 @@
+================================================================================
+CSV COMPARISON REPORT
+================================================================================
+
+1. BASIC STRUCTURE
+--------------------------------------------------------------------------------
+Clean file shape: (891, 12)
+Dirty file shape: (891, 12)
+Row difference: 0
+Column difference: 0
+
+2. COLUMN COMPARISON
+--------------------------------------------------------------------------------
+✓ Columns match perfectly
+
+3. DATA QUALITY COMPARISON (Common Columns)
+--------------------------------------------------------------------------------
+
+Column: Ticket
+  Clean - Nulls: 0, Unique: 681
+  Dirty - Nulls: 0, Unique: 681
+  Different values: 0
+
+Column: Pclass
+  Clean - Nulls: 0, Unique: 3
+  Dirty - Nulls: 0, Unique: 3
+  Different values: 0
+
+Column: Age
+  Clean - Nulls: 0, Unique: 88
+  Dirty - Nulls: 177, Unique: 88
+  Different values: 177
+
+Column: PassengerId
+  Clean - Nulls: 0, Unique: 891
+  Dirty - Nulls: 0, Unique: 891
+  Different values: 0
+
+Column: Name
+  Clean - Nulls: 0, Unique: 891
+  Dirty - Nulls: 0, Unique: 891
+  Different values: 0
+
+Column: Survived
+  Clean - Nulls: 0, Unique: 2
+  Dirty - Nulls: 0, Unique: 2
+  Different values: 0
+
+Column: Sex
+  Clean - Nulls: 0, Unique: 2
+  Dirty - Nulls: 0, Unique: 2
+  Different values: 0
+
+Column: Embarked
+  Clean - Nulls: 0, Unique: 3
+  Dirty - Nulls: 2, Unique: 3
+  Different values: 2
+
+Column: Fare
+  Clean - Nulls: 0, Unique: 248
+  Dirty - Nulls: 0, Unique: 248
+  Different values: 0
+
+Column: Parch
+  Clean - Nulls: 0, Unique: 7
+  Dirty - Nulls: 0, Unique: 7
+  Different values: 0
+
+Column: SibSp
+  Clean - Nulls: 0, Unique: 7
+  Dirty - Nulls: 0, Unique: 7
+  Different values: 0
+
+Column: Cabin
+  Clean - Nulls: 0, Unique: 147
+  Dirty - Nulls: 687, Unique: 147
+  Different values: 687
+
+4. MISSING VALUES SUMMARY
+--------------------------------------------------------------------------------
+Clean file missing values:
+PassengerId    0
+Survived       0
+Pclass         0
+Name           0
+Sex            0
+Age            0
+SibSp          0
+Parch          0
+Ticket         0
+Fare           0
+Cabin          0
+Embarked       0
+dtype: int64
+
+Dirty file missing values:
+PassengerId      0
+Survived         0
+Pclass           0
+Name             0
+Sex              0
+Age            177
+SibSp            0
+Parch            0
+Ticket           0
+Fare             0
+Cabin          687
+Embarked         2
+dtype: int64
+
+5. DUPLICATE ROWS
+--------------------------------------------------------------------------------
+Clean file duplicates: 0
+Dirty file duplicates: 0
+
+6. DATA TYPES
+--------------------------------------------------------------------------------
+
+================================================================================
+END OF REPORT
+================================================================================

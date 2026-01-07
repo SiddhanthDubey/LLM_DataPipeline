@@ -1,0 +1,95 @@
+{
+  "filename": "train.txt",
+  "file_metadata": {
+    "basic": {
+      "filename": "train.txt",
+      "full_path": "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/train.txt",
+      "extension": ".txt",
+      "size_bytes": 1658616,
+      "size_kb": 1619.74,
+      "size_mb": 1.58,
+      "created": "2026-01-06T14:09:59.740573",
+      "modified": "2026-01-06T14:09:59.739576",
+      "accessed": "2026-01-06T14:09:59.743564",
+      "mime_type": "text/plain",
+      "is_symlink": false,
+      "sha256": "3ab03d945a6cb783d818ccd06dafd52d2ed8b4f62f0f85a09d7d11870865b190",
+      "md5": "501eca548aa1ef8d5dbd85662c709831"
+    }
+  },
+  "model_config": {
+    "name": "llama3.1:8b",
+    "description": "Fast model for cleaning text files (TXT, LOG, MD, etc.)",
+    "temperature": 0.2,
+    "system_prompt": "You are an expert in text file processing. You specialize in fixing encoding issues, normalizing line endings, removing excessive whitespace, and cleaning text formatting. You understand different file encodings (UTF-8, Latin-1, etc.) and line ending conventions (LF, CRLF, CR).",
+    "max_tokens": 3000,
+    "top_p": 0.85,
+    "model_key": "text_cleaner",
+    "file_extension": ".txt"
+  },
+  "stages": {
+    "inspection": {
+      "success": true,
+      "code": "import re\nimport chardet\nfrom collections import Counter\nimport os\n\ndef analyze_text_file(file_path):\n    try:\n        with open(file_path, 'rb') as f:\n            raw_data = f.read()\n            encoding = chardet.detect(raw_data)['encoding']\n            text = raw_data.decode(encoding)\n    except Exception as e:\n        print(f\"Error loading file: {e}\")\n        return\n\n    lines = text.splitlines(True)\n    total_lines = len(lines)\n\n    # Line ending type\n    line_endings = [re.search(r'\\r\\n', line) for line in lines]\n    crlf_count = sum(1 for x in line_endings if x is not None)\n    lf_count = total_lines - crlf_count\n\n    # Empty line count and distribution\n    empty_line_count = len([line for line in lines if line.strip() == ''])\n\n    # Lines with trailing whitespace (count)\n    trailing_whitespace_count = len([line for line in lines if re.search(r'\\s+$', line)])\n\n    # Lines with leading whitespace (count)\n    leading_whitespace_count = len([line for line in lines if re.search(r'^\\s+', line)])\n\n    # Control characters found (count \\x00-\\x1f)\n    control_chars_count = sum(1 for char in text if 0 <= ord(char) <= 31)\n\n    # Null bytes (\\x00) count\n    null_bytes_count = text.count('\\x00')\n\n    # Non-ASCII character count\n    non_ascii_count = len([char for char in text if not char.isascii()])\n\n    # Average line length\n    average_line_length = sum(len(line) for line in lines) / total_lines\n\n    print(f\"Total Lines: {total_lines}\")\n    print(f\"Line Ending Type: CRLF ({crlf_count}), LF ({lf_count})\")\n    print(f\"Empty Line Count: {empty_line_count} ({(empty_line_count/total_lines)*100:.2f}%)\")\n    print(f\"Trailing Whitespace Count: {trailing_whitespace_count}\")\n    print(f\"Leading Whitespace Count: {leading_whitespace_count}\")\n    print(f\"Control Characters Found: {control_chars_count}\")\n    print(f\"Null Bytes Count: {null_bytes_count}\")\n    print(f\"Non-ASCII Character Count: {non_ascii_count}\")\n    print(f\"Average Line Length: {average_line_length:.2f}\")\n\n# Load the file\nfile_path = '/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/train.txt'\nanalyze_text_file(file_path)",
+      "output": "Total Lines: 16000\nLine Ending Type: CRLF (0), LF (16000)\nEmpty Line Count: 0 (0.00%)\nTrailing Whitespace Count: 16000\nLeading Whitespace Count: 0\nControl Characters Found: 16000\nNull Bytes Count: 0\nNon-ASCII Character Count: 0\nAverage Line Length: 103.66\n",
+      "timestamp": "2026-01-07T10:50:08.606098"
+    },
+    "cleaning": {
+      "success": true,
+      "code": "import re\nimport chardet\nfrom collections import Counter\n\ndef clean_text_file(file_path):\n    try:\n        with open(file_path, 'rb') as f:\n            raw_data = f.read()\n            encoding = chardet.detect(raw_data)['encoding']\n            text = raw_data.decode(encoding)\n    except Exception as e:\n        print(f\"Error loading file: {e}\")\n        return\n\n    # Normalize line endings to \\n\n    lines = re.sub(r'\\r\\n', '\\n', text).splitlines(True)\n\n    # Remove excessive blank lines (max 2 consecutive)\n    cleaned_lines = []\n    for i, line in enumerate(lines):\n        if line.strip() != '':\n            cleaned_lines.append(line)\n        elif len(cleaned_lines) > 1 and cleaned_lines[-1].strip() == '':\n            continue\n\n    text = '\\n'.join(cleaned_lines)\n\n    # Strip trailing whitespace from each line\n    lines = [re.sub(r'\\s+$', '', line) for line in text.splitlines(True)]\n\n    # Remove control characters and null bytes\n    text = re.sub(r'[\\x00-\\x1f]', '', text)\n\n    # Save with UTF-8 encoding\n    cleaned_text_path = 'cleaned_train.txt'\n    with open(cleaned_text_path, 'w', encoding='utf-8') as f:\n        f.write(text)\n\n    print(f\"Cleaned file saved to: {cleaned_text_path}\")\n\n# Call the function\nclean_text_file('train.txt')",
+      "output": "Cleaned file saved to: cleaned_train.txt\n",
+      "timestamp": "2026-01-07T10:50:52.175354"
+    }
+  },
+  "verification": {
+    "exists": true,
+    "size": 1642616,
+    "lines": 0,
+    "characters": 1642616
+  },
+  "success": true,
+  "conversation": {
+    "model": "llama3.1:8b",
+    "temperature": 0.2,
+    "message_count": 5,
+    "messages": [
+      {
+        "role": "system",
+        "content_preview": "You are an expert in text file processing. You specialize in fixing encoding issues, normalizing lin...",
+        "content_length": 278
+      },
+      {
+        "role": "user",
+        "content_preview": "You are analyzing a file for inspection.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": \"train.txt\",...",
+        "content_length": 4985
+      },
+      {
+        "role": "assistant",
+        "content_preview": "Here is the executable Python code for analyzing the `train.txt` file:\n\n```python\nimport re\nimport c...",
+        "content_length": 2839
+      },
+      {
+        "role": "user",
+        "content_preview": "You are cleaning a file based on inspection results.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": ...",
+        "content_length": 6029
+      },
+      {
+        "role": "assistant",
+        "content_preview": "Here is the executable Python code for cleaning the `train.txt` file:\n\n```python\nimport re\nimport ch...",
+        "content_length": 1590
+      }
+    ]
+  },
+  "session_id": "train_txt_20260107_104904",
+  "timestamp": "2026-01-07T10:50:52.176926",
+  "model_used": {
+    "name": "llama3.1:8b",
+    "description": "Fast model for cleaning text files (TXT, LOG, MD, etc.)",
+    "temperature": 0.2,
+    "system_prompt": "You are an expert in text file processing. You specialize in fixing encoding issues, normalizing line endings, removing excessive whitespace, and cleaning text formatting. You understand different file encodings (UTF-8, Latin-1, etc.) and line ending conventions (LF, CRLF, CR).",
+    "max_tokens": 3000,
+    "top_p": 0.85,
+    "model_key": "text_cleaner",
+    "file_extension": ".txt"
+  }
+}

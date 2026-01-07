@@ -10,7 +10,7 @@ from pathlib import Path
 class ModelHandler:
     """Handles model selection and configuration based on file type"""
     
-    def __init__(self, config_path="/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/models_config.json"):
+    def __init__(self, config_path="models_config.json"):
         """
         Initialize the model handler.
         
@@ -153,46 +153,103 @@ YOUR TASK - FILE INSPECTION:
    - Choose appropriate library for {extension} files
    - Handle any loading errors gracefully
 
-2. ANALYZE THOROUGHLY:
-   For structured data (CSV, Excel):
+2. ANALYZE THOROUGHLY (Choose based on file type):
+
+   === FOR STRUCTURED DATA (CSV, Excel, Parquet) ===
+   Must analyze:
    - Row and column counts
-   - Data types for each column
-   - Missing value analysis (count and percentage)
-   - Duplicate row detection
-   - Statistical summary for numeric columns
-   - Unique value counts for categorical columns
-   - Identify columns with high missing % (>70%, 20-70%, <20%)
+   - Data types for EACH column
+   - Missing value count AND percentage for EACH column
+   - Identify columns with >70%, 20-70%, <20% missing
+   - Duplicate row count
+   - For numeric columns: min, max, mean, median
+   - For text columns: unique value counts
+   - Look for error values: "ERROR", "UNKNOWN", "N/A", "null"
+   - Check for impossible values (negative prices, future dates)
    
-   For text files (TXT, LOG, MD):
-   - Line and character counts
-   - Encoding detection
-   - Line ending type (LF, CRLF, CR)
-   - Empty line count
-   - Whitespace issues (trailing/leading)
-   - Control character detection
+   === FOR TEXT FILES (TXT, LOG, MD, CSV as text) ===
+   Must analyze:
+   - Total line count
+   - Total character count
+   - Encoding detected (UTF-8, Latin-1, CP1252, etc.)
+   - Line ending type (LF \\n, CRLF \\r\\n, CR \\r)
+   - Empty line count and distribution
+   - Lines with trailing whitespace (count)
+   - Lines with leading whitespace (count)
+   - Control characters found (count \\x00-\\x1f)
+   - Null bytes (\\x00) count
+   - Non-ASCII character count
+   - Average line length
    
-   For images (JPG, PNG, etc.):
-   - Dimensions (width x height)
-   - Color mode (RGB, RGBA, Grayscale)
-   - File format and compression info
-   - EXIF data presence
-   - File size analysis
+   === FOR IMAGES (JPG, PNG, GIF, BMP, TIFF) ===
+   Must analyze:
+   - Width x Height (dimensions)
+   - Color mode (RGB, RGBA, Grayscale, CMYK)
+   - File format and compression level
+   - File size in KB/MB
+   - EXIF data present? (count of tags)
+   - GPS data present? (privacy concern)
+   - Orientation issues (needs rotation?)
+   - Image quality assessment
+   - Is resolution excessive? (>4K)
    
-   For JSON/XML:
-   - Structure depth and complexity
-   - Key/attribute presence
-   - Schema validation
-   - Syntax errors
+   === FOR JSON FILES ===
+   Must analyze:
+   - Structure depth (nested levels)
+   - Total keys count
+   - Data types of values
+   - Null/undefined values count
+   - Trailing commas (syntax errors)
+   - Inconsistent formatting
+   - Schema validation (if applicable)
+   - File size
    
-   For audio/video:
-   - Duration and format
-   - Quality metrics (sample rate, bitrate)
-   - Codec information
+   === FOR XML/HTML FILES ===
+   Must analyze:
+   - Total tags count
+   - Malformed tags count
+   - Unclosed tags
+   - Invalid characters in tags
+   - Schema/DTD validation
+   - Namespace issues
+   - Indentation consistency
+   - File size
    
-   For documents (PDF, DOCX):
-   - Page/section count
-   - Text extractability
+   === FOR PDF FILES ===
+   Must analyze:
+   - Page count
+   - Text extractability (% of pages with text)
+   - Metadata present (author, creator, dates)
+   - Embedded images count
+   - File size and size per page
+   - Compression used
+   - Encrypted? (password protected)
+   - Form fields present
+   
+   === FOR AUDIO FILES (WAV, MP3, FLAC, OGG) ===
+   Must analyze:
+   - Duration (in seconds/minutes)
+   - Sample rate (Hz)
+   - Bit depth (16-bit, 24-bit, etc.)
+   - Channels (mono/stereo)
+   - Bitrate (for compressed formats)
+   - Format and codec
+   - Metadata tags (artist, album, etc.)
+   - Silence at start/end (detect)
+   - Volume levels (peak, average)
+   
+   === FOR VIDEO FILES (MP4, AVI, MKV) ===
+   Must analyze:
+   - Duration
+   - Frame rate (FPS)
+   - Resolution (width x height)
+   - Video codec
+   - Audio codec
+   - Bitrate (video and audio)
+   - Audio tracks count
+   - Subtitle tracks
    - Metadata present
+   - File size
 
 3. IDENTIFY ISSUES:
    - List ALL problems found
@@ -209,6 +266,7 @@ YOUR TASK - FILE INSPECTION:
    - Use try/except for error handling
    - Print clear, structured output
    - NO function definitions without calls
+   - NO if __name__ == "__main__" blocks
 
 6. OUTPUT FORMAT:
 ==================== INSPECTION REPORT ====================
@@ -263,76 +321,130 @@ YOUR TASK - FILE CLEANING:
    - Prioritize by severity
    - Plan cleaning strategy
 
-2. APPLY SPECIALIZED CLEANING:
+2. APPLY YOUR CLEANING STRATEGY:
 
-   For STRUCTURED DATA (CSV, Excel, Parquet):
-   a) Missing Values Strategy:
-      - Columns >70% missing → DROP COLUMN (document reason)
-      - Columns 20-70% missing → IMPUTE:
-        * Numeric: median grouped by related column
-        * Categorical: mode (most frequent)
-        * Boolean: mode
-        * DateTime: forward/backward fill
-      - Columns <20% missing → IMPUTE (prefer over deletion)
+   Analyze the inspection results and decide the best cleaning approach.
    
-   b) Data Quality:
-      - Remove exact duplicates
-      - Fix data types (category dtype for low-cardinality)
-      - Strip whitespace from strings
-      - Remove control characters and null bytes
-      - Validate ranges (no negative ages, impossible dates)
+   === FOR CSV/EXCEL/STRUCTURED DATA ===
+   EXAMPLE cleaning structure:
+   Step 1: Import pandas
+   Step 2: Load file with pd.read_csv()
+   Step 3: Replace error values ("ERROR", "UNKNOWN", "N/A", "null") with NaN
+   Step 4: For text columns: use df['col'].fillna(df['col'].mode()[0])
+   Step 5: For numeric columns: use df['col'].fillna(df['col'].median())
+   Step 6: Remove duplicates: df = df.drop_duplicates()
+   Step 7: Save: df.to_csv('cleaned_filename.csv', index=False)
+   Step 8: Print final missing count
    
-   c) CRITICAL - Use MODERN pandas:
-      ✓ df['col'] = df['col'].fillna(value)
-      ✗ df['col'].fillna(value, inplace=True)  # DEPRECATED
+   === FOR TEXT FILES (TXT, LOG, MD) ===
+   EXAMPLE cleaning structure:
+   Step 1: Import necessary libraries
+   Step 2: Read file with proper encoding detection
+   Step 3: Fix encoding (convert to UTF-8)
+   Step 4: Normalize line endings to \\n
+   Step 5: Remove excessive blank lines (max 2 consecutive)
+   Step 6: Strip trailing whitespace from each line
+   Step 7: Remove control characters and null bytes
+   Step 8: Save with UTF-8 encoding
    
-   For TEXT FILES (TXT, LOG, MD):
-   - Convert to UTF-8 encoding
-   - Normalize line endings to LF
-   - Remove excessive blank lines (keep max 2 consecutive)
-   - Strip trailing whitespace
-   - Remove control characters
-   - Fix common encoding artifacts
+   Common issues to fix:
+   - Mixed encodings (Latin-1, CP1252, UTF-8)
+   - Windows line endings (\\r\\n) → Unix (\\n)
+   - Trailing spaces at end of lines
+   - Multiple consecutive blank lines
+   - Control characters (\\x00-\\x1f)
    
-   For IMAGES (JPG, PNG, etc.):
-   - Remove EXIF data (privacy)
-   - Optimize compression (maintain quality)
-   - Fix orientation based on EXIF
-   - Resize if oversized (>4K resolution)
-   - Convert to efficient format if needed
+   === FOR IMAGES (JPG, PNG, GIF, BMP) ===
+   EXAMPLE cleaning structure:
+   Step 1: from PIL import Image
+   Step 2: Load image: img = Image.open('filename')
+   Step 3: Remove EXIF data: img_clean = Image.new(img.mode, img.size)
+   Step 4: Copy pixel data without metadata
+   Step 5: Optimize: save with optimize=True, quality=85
+   Step 6: Fix orientation if needed
+   Step 7: Resize if oversized (>4000px)
+   Step 8: Save: img_clean.save('cleaned_filename.jpg')
    
-   For JSON/XML:
-   - Fix syntax errors (trailing commas, malformed tags)
-   - Validate structure
-   - Normalize formatting
-   - Handle null values appropriately
+   Common issues to fix:
+   - Large EXIF data (GPS, camera info)
+   - Wrong orientation (needs rotation)
+   - Oversized dimensions (>4K)
+   - Unoptimized compression
    
-   For AUDIO/VIDEO:
-   - Normalize audio levels
-   - Remove silence from start/end
-   - Standardize format/codec
-   - Fix metadata issues
+   === FOR JSON/XML FILES ===
+   EXAMPLE cleaning structure:
+   Step 1: import json (or xml.etree.ElementTree)
+   Step 2: Load and parse the file
+   Step 3: Fix syntax errors (trailing commas, quotes)
+   Step 4: Remove null/undefined values if needed
+   Step 5: Normalize structure (consistent formatting)
+   Step 6: Validate schema/structure
+   Step 7: Pretty print with proper indentation
+   Step 8: Save with proper encoding
    
-   For DOCUMENTS (PDF, DOCX):
-   - Extract and clean text
-   - Remove metadata
-   - Fix encoding issues
-   - Optimize file size
+   Common issues to fix:
+   - Trailing commas in JSON
+   - Inconsistent indentation
+   - Mixed quote styles
+   - Null/undefined values
+   - Malformed tags (XML)
+   
+   === FOR PDF FILES ===
+   EXAMPLE cleaning structure:
+   Step 1: from PyPDF2 import PdfReader, PdfWriter
+   Step 2: Read PDF: reader = PdfReader('filename.pdf')
+   Step 3: Create clean writer: writer = PdfWriter()
+   Step 4: Copy pages without metadata
+   Step 5: Remove document metadata
+   Step 6: Compress if needed
+   Step 7: Save: writer.write('cleaned_filename.pdf')
+   Step 8: Report pages and size reduction
+   
+   Common issues to fix:
+   - Large metadata (author, creation software)
+   - Uncompressed content
+   - Embedded fonts causing bloat
+   
+   === FOR AUDIO FILES (WAV, MP3, FLAC) ===
+   EXAMPLE cleaning structure:
+   Step 1: import wave (or pydub)
+   Step 2: Load audio file
+   Step 3: Normalize volume levels
+   Step 4: Remove silence from start/end
+   Step 5: Standardize sample rate (44100 Hz)
+   Step 6: Convert to mono if stereo not needed
+   Step 7: Remove metadata tags
+   Step 8: Save in optimized format
+   
+   Common issues to fix:
+   - Inconsistent volume levels
+   - Silent periods at start/end
+   - Varying sample rates
+   - Large metadata/album art
+   
+   CRITICAL RULES FOR ALL TYPES:
+   - Import ALL needed libraries at the top
+   - Handle errors with try/except
+   - Save the cleaned file as the LAST step
+   - Print what was cleaned and final stats
+   - Don't delete original file
+   - NO if __name__ == "__main__" blocks
+   
+==================== CLEANING REPORT ====================
+File: {filename}
 
-3. PRESERVATION PRIORITY:
-   - ALWAYS prefer data preservation over deletion
-   - Only drop columns if >70% missing
-   - Document every change made
-   - Maintain original structure when possible
+ACTIONS TAKEN:
+1. [what you did]
+2. [what you did]
 
-4. CODE REQUIREMENTS:
-   - Write EXECUTABLE Python code
-   - Include all imports
-   - Comprehensive error handling
-   - Print progress and results
-   - Save to: 'cleaned_{filename}'
+FINAL STATE:
+- Missing values: [count]
+- Rows: [count]
 
-5. OUTPUT FORMAT:
+✓ Saved to: cleaned_{filename}
+============================================================
+
+Write clean, working Python code. No complex logic needed.
 ==================== CLEANING REPORT ====================
 File: {filename}
 Type: {extension}

@@ -1,0 +1,92 @@
+{
+  "filename": "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/Titanic-Dataset.csv",
+  "file_metadata": {
+    "basic": {
+      "filename": "Titanic-Dataset.csv",
+      "full_path": "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/Titanic-Dataset.csv",
+      "extension": ".csv",
+      "size_bytes": 61194,
+      "size_kb": 59.76,
+      "size_mb": 0.06,
+      "created": "2026-01-06T15:48:36.537620",
+      "modified": "2026-01-06T15:48:36.537305",
+      "accessed": "2026-01-06T15:48:36.539727",
+      "mime_type": "text/csv",
+      "is_symlink": false,
+      "sha256": "7d118fef8b6ccf7f81111877bc388536f7b1e498a655e3d649d19aaa010e9f6f",
+      "md5": "2309cc5f04782ed9bb6016d9f4e381cf"
+    }
+  },
+  "model_config": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  },
+  "stages": {
+    "inspection": {
+      "success": true,
+      "code": "import pandas as pd\nfrom typing import Dict, List\nimport logging\n\n# Set up logging\nlogging.basicConfig(level=logging.INFO)\nlogger = logging.getLogger(__name__)\n\ndef inspect_file(file_path: str) -> None:\n    try:\n        # Load the CSV file\n        df = pd.read_csv(file_path)\n\n        # Get basic information about the file\n        info = pd.get_info(df)\n\n        # Print summary statistics for each column\n        print(\"Summary Statistics:\")\n        print(df.describe())\n\n        # Identify columns with high missing % (>70%, 20-70%, <20%)\n        missing_cols = df.isnull().mean() * 100\n\n        # Print out the results of the inspection\n        print(\"\\nMissing Value Analysis:\")\n        for col, pct in missing_cols.items():\n            if pct > 0:\n                print(f\"{col}: {pct:.2f}%\")\n\n        # Identify columns with high duplicate count (>50%)\n        duplicate_counts = df.duplicated().sum()\n        if duplicate_counts / len(df) > 0.5:\n            logger.warning(f\"Duplicates found in column(s)\")\n\n        # Print out the results of the inspection\n        print(\"\\nDuplicate Row Detection:\")\n        print(f\"Number of duplicate rows: {duplicate_counts}\")\n\n    except pd.errors.EmptyDataError as e:\n        logger.error(f\"File is empty: {e}\")\n    except pd.errors.ParserError as e:\n        logger.error(f\"Error parsing file: {e}\")\n    except Exception as e:\n        logger.error(f\"An error occurred: {e}\")\n\n# Main function\ndef main() -> None:\n    # Set the filename and path to the CSV file\n    file_path = 'Titanic-Dataset.csv'\n\n    # Call the inspect_file function with the file path\n    inspect_file(file_path)\n\nif __name__ == \"__main__\":\n    main()",
+      "output": "STDERR:\nWarning: could not change working dir: name 'os' is not defined\n",
+      "timestamp": "2026-01-06T15:50:30.447911"
+    },
+    "cleaning": {
+      "success": true,
+      "code": "import pandas as pd\nfrom typing import Dict, List\nimport logging\nimport os\n\n# Set up logging\nlogging.basicConfig(level=logging.INFO)\nlogger = logging.getLogger(__name__)\n\ndef clean_file(file_path: str) -> None:\n    try:\n        # Load the CSV file\n        df = pd.read_csv(file_path)\n\n        # Get basic information about the file\n        info = pd.get_info(df)\n\n        # Identify columns with high missing % (>70%, 20-70%, <20%)\n        missing_cols = df.isnull().mean() * 100\n\n        # Drop columns with >70% missing values\n        for col, pct in missing_cols.items():\n            if pct > 70:\n                logger.info(f\"Dropping column '{col}' due to high missing value percentage ({pct:.2f}%)\")\n                df = df.drop(col, axis=1)\n\n        # Impute missing values for columns with 20-70% missing\n        for col, pct in missing_cols.items():\n            if 20 <= pct < 70:\n                logger.info(f\"Imputing missing values for column '{col}' (missing percentage: {pct:.2f}%)\")\n                if df[col].dtype == 'object':\n                    # Categorical columns\n                    mode = df[col].mode()[0]\n                    df[col] = df[col].fillna(mode)\n                elif df[col].dtype == 'int64' or df[col].dtype == 'float64':\n                    # Numeric columns\n                    median = df[col].median()\n                    df[col] = df[col].fillna(median)\n                elif df[col].dtype == 'bool':\n                    # Boolean columns\n                    mode = df[col].mode()[0]\n                    df[col] = df[col].fillna(mode)\n\n        # Remove exact duplicates\n        logger.info(\"Removing exact duplicates\")\n        df.drop_duplicates(inplace=True)\n\n        # Fix data types (category dtype for low-cardinality)\n        for col in df.columns:\n            if pd.api.types.is_categorical_dtype(df[col]):\n                logger.info(f\"Fixing data type for column '{col}' to category\")\n                df[col] = df[col].astype('category')\n\n        # Strip whitespace from strings\n        logger.info(\"Stripping whitespace from string columns\")\n        for col in df.columns:\n            if pd.api.types.is_string_dtype(df[col]):\n                df[col] = df[col].str.strip()\n\n        # Remove control characters and null bytes\n        logger.info(\"Removing control characters and null bytes\")\n        for col in df.columns:\n            if pd.api.types.is_string_dtype(df[col]):\n                df[col] = df[col].str.replace(r'[\\x00-\\x1f]', '', regex=True)\n\n        # Validate ranges (no negative ages, impossible dates)\n        logger.info(\"Validating ranges\")\n        for col in df.columns:\n            if col == 'Age':\n                df.loc[df['Age'] < 0, 'Age'] = 0\n            elif col == 'Date':\n                df.loc[df['Date'] > '2026-01-06', 'Date'] = '2026-01-06'\n\n        # Save cleaned data to new CSV file\n        logger.info(\"Saving cleaned data to new CSV file\")\n        df.to_csv('cleaned_Titanic-Dataset.csv', index=False)\n\n    except pd.errors.EmptyDataError as e:\n        logger.error(f\"File is empty: {e}\")\n    except pd.errors.ParserError as e:\n        logger.error(f\"Error parsing file: {e}\")\n    except Exception as e:\n        logger.error(f\"An error occurred: {e}\")\n\n# Main function\ndef main() -> None:\n    # Set the filename and path to the CSV file\n    file_path = 'Titanic-Dataset.csv'\n\n    # Call the clean_file function with the file path\n    clean_file(file_path)\n\nif __name__ == \"__main__\":\n    main()",
+      "output": "STDERR:\nWarning: could not change working dir: name 'os' is not defined\n",
+      "timestamp": "2026-01-06T15:51:59.622358"
+    }
+  },
+  "verification": {
+    "exists": false
+  },
+  "success": false,
+  "conversation": {
+    "model": "llama3.1:8b",
+    "temperature": 0.3,
+    "message_count": 5,
+    "messages": [
+      {
+        "role": "system",
+        "content_preview": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling...",
+        "content_length": 323
+      },
+      {
+        "role": "user",
+        "content_preview": "You are analyzing a file for inspection.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": \"Titanic-Dat...",
+        "content_length": 3266
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\nfrom typing import Dict, List\nimport logging\n\n# Set up logging\nlogging...",
+        "content_length": 2219
+      },
+      {
+        "role": "user",
+        "content_preview": "You are cleaning a file based on inspection results.\n\nFILE METADATA:\n{\n  \"basic\": {\n    \"filename\": ...",
+        "content_length": 3860
+      },
+      {
+        "role": "assistant",
+        "content_preview": "```python\nimport pandas as pd\nfrom typing import Dict, List\nimport logging\nimport os\n\n# Set up loggi...",
+        "content_length": 4121
+      }
+    ]
+  },
+  "session_id": "_home_dent1st_SPPproject_ProjectV4_Core_Pipeline_Files_Titanic-Dataset_csv_20260106_154946",
+  "timestamp": "2026-01-06T15:51:59.622462",
+  "model_used": {
+    "name": "llama3.1:8b",
+    "description": "Specialized model for cleaning structured data (CSV, Excel, Parquet)",
+    "temperature": 0.3,
+    "system_prompt": "You are an expert data scientist specializing in cleaning structured datasets. You excel at handling missing values, duplicates, data type conversions, and outlier detection. You prefer imputation over deletion and always preserve as much data as possible. You use modern pandas best practices and avoid deprecated methods.",
+    "max_tokens": 4000,
+    "top_p": 0.9,
+    "model_key": "csv_cleaner",
+    "file_extension": ".csv"
+  }
+}

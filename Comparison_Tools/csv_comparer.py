@@ -110,8 +110,8 @@ def compare_csv_files(clean_file, dirty_file, output_report='comparison_report.t
 # Example usage
 if __name__ == "__main__":
     # Replace these with your actual file paths
-    clean_file = "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/dirty_cafe_sales.csv"
-    dirty_file = "/home/dent1st/SPPproject/ProjectV4/cleaned_dirty_cafe_sales.csv"
+    clean_file = "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/cleaned_Titanic-Dataset.csv"
+    dirty_file = "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/Titanic-Dataset.csv"
     
     try:
         df_clean, df_dirty = compare_csv_files(clean_file, dirty_file)

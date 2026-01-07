@@ -15,7 +15,7 @@ from datetime import datetime
 # ============================================================================
 # CONFIGURATION
 # ============================================================================
-FILENAME = "/home/dent1st/SPPproject/ProjectV4/Core_Pipeline_Files/train.txt"  # Change this to any file
+FILENAME = "train.txt"  # Change this to any file
 
 
 # ============================================================================
